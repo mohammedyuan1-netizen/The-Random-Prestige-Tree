@@ -325,6 +325,7 @@ function autobuyUpgrades(layer){
 }
 
 function gameLoop(diff) {
+	updatePerformanceStats(diff)
 	if (isEndgame() || tmp.gameEnded){
 		tmp.gameEnded = true
 		clearParticles()
@@ -431,6 +432,6 @@ var interval = setInterval(function() {
 	adjustPopupTime(trueDiff)
 	updateParticles(trueDiff)
 	ticking = false
-}, 50)
+}, 50) // 20 times a second
 
-setInterval(function() {needCanvasUpdate = true}, 500)
+setInterval(function() {needCanvasUpdate = true}, 50)

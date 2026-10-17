@@ -142,7 +142,6 @@ function fixSave() {
 			player[layer].total = new Decimal(player[layer].total);
 
 		if (layers[layer].tabFormat && !Array.isArray(layers[layer].tabFormat)) {
-
 			if (!Object.keys(layers[layer].tabFormat).includes(player.subtabs[layer].mainTabs))
 				player.subtabs[layer].mainTabs = Object.keys(layers[layer].tabFormat)[0];
 		}
