@@ -12,11 +12,16 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.1",
+	num: "1.2",
 	name: "The start of Something",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v1.1</h3><br>
+		- Added 5 Upgrades to the second layer (Renamed Ultra)<br>
+		- Added a Buyable to the prestige layer<br>
+		- Added 2 New Upgrades to the prestige layer<br>
+		- Endgame: 1.00e9 Prestige Points<br><br>
 	<h3>v1.0</h3><br>
 		- Added 8 Upgrades and a temporary empty layer.<br>
 		- Endgame: Upgrade 8.<br><br>
@@ -50,8 +55,10 @@ function getPointGen() {
 	if (hasUpgrade("p", 13)) gain = gain.times(player.p.points.pow(new Decimal(1).div(2.5)).max(1))
 	if (hasUpgrade("p", 14)) gain = gain.times(player.points.pow(0.2).max(1))
 	if (hasUpgrade("p", 15)) gain = gain.times(new Decimal(Math.PI))
-	if (hasUpgrade("p", 21)) gain = gain.times(3)
-	if (hasUpgrade("p", 22)) gain = gain.times(player.p.points.pow(new Decimal(1).div(2)).max(1))		
+	if (hasUpgrade("p", 22)) gain = gain.times(2)
+	if (hasUpgrade("u", 11)) gain = gain.times(5)
+	if (hasUpgrade("u", 12)) gain = gain.times(10)
+	if (hasUpgrade("u", 15)) gain = gain.times(10)
 	return gain
 }
 
@@ -86,7 +93,15 @@ function maxTickLength() {
 // Use this if you need to undo inflation from an older version. If the version is older than the version that fixed the issue,
 // you can cap their current resources with this.
 function fixOldSave(oldVersion){
-	if (player.p.upgrades.includes(23)) player.s.unlocked = true
+	if (player.s) {
+		player.u = Object.assign(player.u, player.s)
+		fixData(getStartLayerData("u"), player.u)
+		delete player.s
+	}
+	if (player.tab === "s") player.tab = "u"
+	if (player.navTab === "s") player.navTab = "u"
+	if (player.lastSafeTab === "s") player.lastSafeTab = "u"
+	if (player.p.upgrades.includes(23)) player.u.unlocked = true
 }
 // ==========================================
 // Ticks per second (TPS) tracking and display

@@ -8,13 +8,19 @@ addLayer("p", {
     }},
     color: "#2383dcd3",
     requires: new Decimal(10), // Can be a function that takes requirement increases into account
-    resource: "prestige points", // Name of prestige currency
+    resource: "Prestige Points", // Name of prestige currency
     baseResource: "points", // Name of resource prestige is based on
     baseAmount() {return player.points}, // Get the current amount of baseResource
     type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     exponent: 0.5, // Prestige currency exponent
     gainMult() { // Calculate the multiplier for main currency from bonuses
         let mult = new Decimal(1)
+        if (hasUpgrade("p", 21)) mult = mult.times(3)
+        if (hasUpgrade("u", 11)) mult = mult.times(3)
+        if (hasUpgrade("u", 12)) mult = mult.times(5)
+        if (hasUpgrade("u", 13)) mult = mult.times(buyableEffect("p", 11).prestige)
+        if (hasUpgrade("u", 15)) mult = mult.times(3)
+        if (hasUpgrade("p", 24)) mult = mult.times(upgradeEffect("p", 24))
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -33,6 +39,42 @@ addLayer("p", {
     // Display properties can be added after this point, e.g.:
     // display() { return `You have ${format(player[this.layer].points)} prestige points.` },
     layerShown(){return true},
+    tabFormat: {
+        "Upgrades": {
+            content: ["main-display", "prestige-button", "resource-display", "milestones", "upgrades"],
+        },
+        "Buyables": {
+            unlocked() { return hasUpgrade("u", 13) },
+            content: ["buyables"],
+        },
+    },
+    buyables: {
+        11: {
+            title: "A new buyable!",
+            cost(x) { return new Decimal(100000).times(Decimal.pow(5, x)) },
+            effect(x) {
+                return {
+                    ultra: Decimal.pow(1.1, x),
+                    prestige: Decimal.pow(1.25, x),
+                }
+            },
+            display() {
+                let data = tmp[this.layer].buyables[this.id]
+                return "Cost: " + format(data.cost) + " Prestige Points\n" +
+                    "Amount: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n" +
+                    "Ultra point gain: x" + format(data.effect.ultra) + "\n" +
+                    "Prestige point gain: x" + format(data.effect.prestige)
+            },
+            unlocked() { return hasUpgrade("u", 13) || getBuyableAmount(this.layer, this.id).gt(0) },
+            canAfford() { return player[this.layer].points.gte(tmp[this.layer].buyables[this.id].cost) },
+            buy() {
+                let cost = tmp[this.layer].buyables[this.id].cost
+                player[this.layer].points = player[this.layer].points.sub(cost)
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(cost)
+            },
+        },
+    },
     upgrades: {
         rows: 4,
         cols: 5,
@@ -78,10 +120,11 @@ addLayer("p", {
         },
         22: {
             title: "Seventh Upgrade",
-            description: "Boost prestige points by prestige points^0.5.",
+            description: "Boost points by x2.",
             cost: new Decimal(250),
             unlocked() { return hasUpgrade(this.layer, 21) },
-            effect() { return player[this.layer].points.pow(new Decimal(1).div(2)).max(1) },
+            effect() { return new Decimal(2) },
+            effectDisplay() { return format(this.effect()) + "x" },
         },
         23: {
             title: "Eighth Upgrade",
@@ -89,28 +132,84 @@ addLayer("p", {
             cost: new Decimal(500),
             unlocked() { return hasUpgrade(this.layer, 22) },
             onPurchase() {
-                player.s.unlocked = true
+                player.u.unlocked = true
                 needCanvasUpdate = true
             },
+        },
+        24: {
+            title: "Ninth Upgrade",
+            description: "Boosts prestige point gain by log10(points^0.8).",
+            cost: new Decimal(100000),
+            unlocked() { return hasUpgrade("p", 23) && hasUpgrade("u", 14) },
+            effect() { return player.points.pow(0.8).log10().max(1) },
+            effectDisplay() { return format(this.effect()) + "x" },
+        },
+        25: {
+            title: "Tenth Upgrade",
+            description: "Boost Ultra Point gain by x5.",
+            cost: new Decimal(25000000),
+            unlocked() { return hasUpgrade("p", 24) && hasUpgrade("u", 14) },
+            effect() { return new Decimal(5) },
+            effectDisplay() { return format(this.effect()) + "x" },
         },
     },
 })
 
-addLayer("s", {
-    name: "second",
-    symbol: "S",
+addLayer("u", {
+    name: "Ultra",
+    symbol: "U",
     position: 0,
     startData() { return {
         unlocked: false,
         points: new Decimal(0),
     }},
     color: "#45b36b",
-    requires: new Decimal(1000),
-    resource: "second points",
-    baseResource: "points",
-    baseAmount() { return player.points },
+    requires: new Decimal(500),
+    resource: "Ultra Points",
+    baseResource: "Prestige Points",
+    baseAmount() { return player.p.points },
     type: "normal",
     exponent: 0.5,
     row: 1,
     layerShown() { return player[this.layer].unlocked },
+    upgrades: {
+        rows: 1,
+        cols: 5,
+        11: {
+            title: "Wow a second layer",
+            description: "Boosts point gain by x5 and prestige point gain by x3.",
+            cost: new Decimal(1),
+        },
+        12: {
+            title: "More boosts",
+            description: "Boosts point gain by x10 and prestige point gain by x5.",
+            cost: new Decimal(4),
+            unlocked() { return hasUpgrade(this.layer, 11) },
+        },
+        13: {
+            title: "Unlock Ultra Boosts",
+            description: "Unlocks a new tab with a repeatable buyable.",
+            cost: new Decimal(10),
+            unlocked() { return hasUpgrade(this.layer, 12) },
+        },
+        14: {
+            title: "More upgrades",
+            description: "Unlock prestige upgrade 24.",
+            cost: new Decimal(20),
+            unlocked() { return hasUpgrade(this.layer, 13) },
+        },
+        15: {
+            title: "Alot of Boosts",
+            description: "Point gain x10, Prestige point gain x3, and ultra point gain x1.5.",
+            cost: new Decimal(400),
+            unlocked() { return hasUpgrade(this.layer, 14) },
+        },
+    },
+    gainMult() {
+        let mult = new Decimal(1)
+        if (hasUpgrade("u", 13)) mult = mult.times(buyableEffect("p", 11).ultra)
+        if (hasUpgrade("p", 25)) mult = mult.times(upgradeEffect("p", 25))
+        if (hasUpgrade("u", 15)) mult = mult.times(1.5)
+        return mult
+    },
 })
