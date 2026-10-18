@@ -129,7 +129,7 @@ function canReset(layer)
 function rowReset(row, layer) {
 	for (lr in ROW_LAYERS[row]){
 		if(layers[lr].doReset) {
-			if (!isNaN(row)) Vue.set(player[lr], "activeChallenge", null) // Exit challenges on any row reset on an equal or higher row
+			if (!isNaN(row) && !layers[lr].keepChallengeOnReset) Vue.set(player[lr], "activeChallenge", null) // Exit challenges on any row reset on an equal or higher row
 			run(layers[lr].doReset, layers[lr], layer)
 		}
 		else
@@ -213,7 +213,7 @@ function doReset(layer, force=false) {
 
 
 	for (layerResetting in layers) {
-		if (row >= layers[layerResetting].row && (!force || layerResetting != layer)) completeChallenge(layerResetting)
+		if (row >= layers[layerResetting].row && (!force || layerResetting != layer) && !layers[layerResetting].keepChallengeOnReset) completeChallenge(layerResetting)
 	}
 
 	player.points = (row == 0 ? decimalZero : getStartPoints())

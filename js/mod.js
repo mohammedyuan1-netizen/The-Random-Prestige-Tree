@@ -1,5 +1,5 @@
 let modInfo = {
-	name: "The Random Things Tree",
+	name: "The Random Prestige Tree",
 	author: "yuky",
 	pointsName: "points",
 	modFiles: ["layers.js", "tree.js"],
@@ -12,11 +12,19 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.2",
+	num: "1.3",
 	name: "The start of Something",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v1.2</h3><br>
+		- Added 2 New Layers (Mega Unfinished)<br>
+		- Upgrades in each layer:<br>
+		&nbsp;&nbsp;Prestige: 12<br>
+		&nbsp;&nbsp;Ultra: 10<br>
+		&nbsp;&nbsp;Automation: 3<br>
+		&nbsp;&nbsp;Mega: 1<br>
+		- New endgame: Mega Upgrade 1, 5e23 Points.<br><br>
 	<h3>v1.1</h3><br>
 		- Added 5 Upgrades to the second layer (Renamed Ultra)<br>
 		- Added a Buyable to the prestige layer<br>
@@ -59,6 +67,11 @@ function getPointGen() {
 	if (hasUpgrade("u", 11)) gain = gain.times(5)
 	if (hasUpgrade("u", 12)) gain = gain.times(10)
 	if (hasUpgrade("u", 15)) gain = gain.times(10)
+	if (hasUpgrade("u", 17)) gain = gain.times(5)
+	if (hasChallenge("p", 11)) gain = gain.times(50)
+	if (hasUpgrade("m", 11)) gain = gain.times(10)
+	if (getBuyableAmount("p", 12) && getBuyableAmount("p", 12).gt(0)) gain = gain.times(buyableEffect("p", 12).points)
+	if (inChallenge("p", 11)) gain = gain.pow(0.5)
 	return gain
 }
 
