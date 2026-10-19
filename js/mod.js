@@ -12,11 +12,23 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.3",
-	name: "The start of Something",
+	num: "1.4",
+	name: "Getting somewhere..?",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+    <h3>v1.3</h3><br>
+	-Added some balancing (might still be unbalanced)<br>
+	-Remade the mega layer (Now is a static layer)<br>
+	-Added hotkeys for Prestige, Ultra, and Mega layers<br>
+	-Added More Upgrades to the three layers<br>
+	-Temporarily removed automation layer (Will be added back in the future)<br>
+	-Upgrades in each layer:<br>
+	&nbsp;&nbsp;Prestige: 14<br>
+	&nbsp;&nbsp;Ultra: 10<br>
+	&nbsp;&nbsp;Mega: 2<br>
+
+
 	<h3>v1.2</h3><br>
 		- Added 2 New Layers (Mega Unfinished)<br>
 		- Upgrades in each layer:<br>
@@ -58,11 +70,11 @@ function getPointGen() {
 		return new Decimal(0)
 
 	let gain = new Decimal(1)
-	if (hasUpgrade("p", 11)) gain = gain.times(2.5)
-	if (hasUpgrade("p", 12)) gain = gain.times(3)
-	if (hasUpgrade("p", 13)) gain = gain.times(player.p.points.pow(new Decimal(1).div(2.5)).max(1))
-	if (hasUpgrade("p", 14)) gain = gain.times(player.points.pow(0.2).max(1))
-	if (hasUpgrade("p", 15)) gain = gain.times(new Decimal(Math.PI))
+	if (hasUpgrade("p", 11)) gain = gain.times(3)
+	if (hasUpgrade("p", 12)) gain = gain.times(4)
+	if (hasUpgrade("p", 13)) gain = gain.times(player.p.points.pow(new Decimal(1).div(2)).max(1).min(1e12))
+	if (hasUpgrade("p", 14)) gain = gain.times(player.points.pow(0.25).max(1).min(1e9))
+	if (hasUpgrade("p", 15)) gain = gain.times(5)
 	if (hasUpgrade("p", 22)) gain = gain.times(2)
 	if (hasUpgrade("u", 11)) gain = gain.times(5)
 	if (hasUpgrade("u", 12)) gain = gain.times(10)
