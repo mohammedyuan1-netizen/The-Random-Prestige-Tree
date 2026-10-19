@@ -12,12 +12,14 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.4",
+	num: "1.4.1",
 	name: "Getting somewhere..?",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-    <h3>v1.3</h3><br>
+<h3>v1.4.1</h3><br>
+-Added branches (its finally a real tree xD)<br>
+    <h3>v1.4</h3><br>
 	-Added some balancing (might still be unbalanced)<br>
 	-Remade the mega layer (Now is a static layer)<br>
 	-Added hotkeys for Prestige, Ultra, and Mega layers<br>
@@ -27,9 +29,7 @@ let changelog = `<h1>Changelog:</h1><br>
 	&nbsp;&nbsp;Prestige: 14<br>
 	&nbsp;&nbsp;Ultra: 10<br>
 	&nbsp;&nbsp;Mega: 2<br>
-
-
-	<h3>v1.2</h3><br>
+	<h3>v1.3</h3><br>
 		- Added 2 New Layers (Mega Unfinished)<br>
 		- Upgrades in each layer:<br>
 		&nbsp;&nbsp;Prestige: 12<br>
@@ -37,12 +37,12 @@ let changelog = `<h1>Changelog:</h1><br>
 		&nbsp;&nbsp;Automation: 3<br>
 		&nbsp;&nbsp;Mega: 1<br>
 		- New endgame: Mega Upgrade 1, 5e23 Points.<br><br>
-	<h3>v1.1</h3><br>
+	<h3>v1.2</h3><br>
 		- Added 5 Upgrades to the second layer (Renamed Ultra)<br>
 		- Added a Buyable to the prestige layer<br>
 		- Added 2 New Upgrades to the prestige layer<br>
 		- Endgame: 1.00e9 Prestige Points<br><br>
-	<h3>v1.0</h3><br>
+	<h3>v1.1</h3><br>
 		- Added 8 Upgrades and a temporary empty layer.<br>
 		- Endgame: Upgrade 8.<br><br>
 	<h3>v0.0</h3><br>
