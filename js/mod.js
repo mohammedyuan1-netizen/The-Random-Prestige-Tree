@@ -12,11 +12,22 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-    num: "1.4.1",
+    num: "1.5",
     name: "Getting somewhere..?",
 }
 
 let changelog = `<h1>Changelog:</h1><br><br>
+<h3>v1.5</h3><br>
+-Added the Replicanti layer (WIP)<br>
+-Added automation again (Its back woo)<br>
+-Some Balancing<br>
+-Upgrades in each layer:
+&nbsp;&nbsp;Prestige: 16<br>
+&nbsp;&nbsp;Ultra: 12<br>
+&nbsp;&nbsp;Replicanti: 4<br>
+&nbsp;&nbsp;Mega: 3<br>
+&nbsp;&nbsp;Automation: 2<br>
+Endgame: 1.00e115 Points<br><br>
 <h3>v1.4.1</h3><br>
 -Added branches (its finally a real tree xD)<br>
     <h3>v1.4</h3><br>
@@ -117,7 +128,7 @@ var backgroundStyle = {
 
 // You can change this if you have things that can be messed up by long tick lengths
 function maxTickLength() {
-    return(3600) // Default is 1 hour which is just arbitrarily large
+    return(1) //
 }
 
 // Use this if you need to undo inflation from an older version. If the version is older than the version that fixed the issue,
