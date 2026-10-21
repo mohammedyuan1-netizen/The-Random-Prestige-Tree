@@ -12,27 +12,31 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-    num: "1.6",
+    num: "1.6.0.1",
     name: "Getting somewhere..?",
 }
 
 let changelog = `<h1>Changelog:</h1><br><br>
+<h3>v1.6.0.1</h3><br>
+-Edited the changelog<br>
 <h3>v1.6</h3><br>
+-21/20/26<br>
 -Added the Super layer (WIP)<br>
 -Added a lot of revamping<br>
--Upgrades in each layer:
+-Upgrades in each layer:<br>
 &nbsp;&nbsp;Prestige: 19<br>
 &nbsp;&nbsp;Ultra: 16<br>
 &nbsp;&nbsp;Replicanti: 14<br>
-&nbsp;&nbsp;Mega: 12<br>
+&nbsp;&nbsp;Mega: 3<br>
 &nbsp;&nbsp;Automation: 3<br>
 &nbsp;&nbsp;Super: 2<br>
 Endgame: 1.00e175 Points<br><br>
 <h3>v1.5</h3><br>
+-20/10/26<br>
 -Added the Replicanti layer (WIP)<br>
 -Added automation again (Its back woo)<br>
 -Some Balancing<br>
--Upgrades in each layer:
+-Upgrades in each layer:<br>
 &nbsp;&nbsp;Prestige: 16<br>
 &nbsp;&nbsp;Ultra: 12<br>
 &nbsp;&nbsp;Replicanti: 4<br>
