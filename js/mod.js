@@ -6,17 +6,28 @@ let modInfo = {
 
     discordName: "",
     discordLink: "",
-    initialStartPoints: new Decimal (0), // Used for hard resets and new players
+    initialStartPoints: new Decimal(0), // Used for hard resets and new players
     offlineLimit: 0,  // In hours
 }
 
 // Set your version in num and name
 let VERSION = {
-    num: "1.5",
+    num: "1.6",
     name: "Getting somewhere..?",
 }
 
 let changelog = `<h1>Changelog:</h1><br><br>
+<h3>v1.6</h3><br>
+-Added the Super layer (WIP)<br>
+-Added a lot of revamping<br>
+-Upgrades in each layer:
+&nbsp;&nbsp;Prestige: 19<br>
+&nbsp;&nbsp;Ultra: 16<br>
+&nbsp;&nbsp;Replicanti: 14<br>
+&nbsp;&nbsp;Mega: 12<br>
+&nbsp;&nbsp;Automation: 3<br>
+&nbsp;&nbsp;Super: 2<br>
+Endgame: 1.00e175 Points<br><br>
 <h3>v1.5</h3><br>
 -Added the Replicanti layer (WIP)<br>
 -Added automation again (Its back woo)<br>
@@ -66,25 +77,25 @@ let winText = `Congratulations! You have reached the end and beaten this game, b
 // (The ones here are examples, all official functions are already taken care of)
 var doNotCallTheseFunctionsEveryTick = ["blowUpEverything"]
 
-function getStartPoints(){
+function getStartPoints() {
     return new Decimal(modInfo.initialStartPoints)
 }
 
 // Determines if it should show points/sec
-function canGenPoints(){
+function canGenPoints() {
     return true
 }
 
 // Calculate points/sec!
 function getPointGen() {
-    if(!canGenPoints())
+    if (!canGenPoints())
         return new Decimal(0)
 
     let gain = new Decimal(1)
     if (hasUpgrade("p", 11)) gain = gain.times(3)
     if (hasUpgrade("p", 12)) gain = gain.times(4)
     if (hasUpgrade("p", 13)) {
-        let cap = hasUpgrade("p", 35) ? 1e50 : 1e12;
+        let cap = hasUpgrade("p", 35) ? 1e18 : 1e12;
         gain = gain.times(player.p.points.pow(new Decimal(1).div(2)).max(1).min(cap));
     }
     if (hasUpgrade("p", 14)) gain = gain.times(player.points.pow(0.25).max(1).min(1e9))
@@ -92,20 +103,37 @@ function getPointGen() {
     if (hasUpgrade("p", 22)) gain = gain.times(2)
     if (hasUpgrade("u", 11)) gain = gain.times(5)
     if (hasUpgrade("u", 12)) gain = gain.times(10)
-    if (hasUpgrade("u", 15)) gain = gain.times(10)
     if (hasUpgrade("u", 22)) gain = gain.times(5)
     if (hasChallenge("p", 11)) gain = gain.times(50)
     if (hasUpgrade("m", 11)) gain = gain.times(10)
     if (getBuyableAmount("p", 12) && getBuyableAmount("p", 12).gt(0)) gain = gain.times(buyableEffect("p", 12).points)
     if (inChallenge("p", 11)) gain = gain.pow(0.5)
     if (hasUpgrade("u", 31)) gain = gain.times(upgradeEffect("u", 31))
-    if (hasUpgrade("u", 32)) gain = gain.times(upgradeEffect("u", 32))  
+    if (hasUpgrade("u", 32)) gain = gain.times(upgradeEffect("u", 32))
+    if (hasUpgrade("r", 24)) gain = gain.times(upgradeEffect("r", 24))
+    if (hasUpgrade("r", 31)) gain = gain.times(upgradeEffect("r", 31))
+    if (hasUpgrade("p", 42)) gain = gain.times(1e6)
+     if (hasUpgrade("p", 43)) gain = gain.times(1e7)
+
+    if (player.s && player.s.unlocked) gain = gain.times(tmp.s.effect.points);    
+    
+    // Apply the point exponent from getPointExp()
+    gain = gain.pow(getPointExp());
+
     return gain
 }
 
+function getPointExp() {
+    let exp = new Decimal(1);
+    if (hasUpgrade("u", 15)) exp = exp.times(1.05);
+    if (hasUpgrade("u", 41)) exp = exp.times(1.075);
+    return exp;
+}
+
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
-function addedPlayerData() { return {
-}}
+function addedPlayerData() { 
+    return {}
+}
 
 // Display extra things at the top of the page
 var displayThings = [
@@ -118,22 +146,19 @@ function isEndgame() {
 }
 
 
-
 // Less important things beyond this point!
 
 // Style for the background, can be a function
-var backgroundStyle = {
-
-}
+var backgroundStyle = {}
 
 // You can change this if you have things that can be messed up by long tick lengths
 function maxTickLength() {
-    return(1) //
+    return(1)
 }
 
 // Use this if you need to undo inflation from an older version. If the version is older than the version that fixed the issue,
 // you can cap their current resources with this.
-function fixOldSave(oldVersion){
+function fixOldSave(oldVersion) {
     if (player.s) {
         player.u = Object.assign(player.u, player.s)
         fixData(getStartLayerData("u"), player.u)
@@ -144,11 +169,12 @@ function fixOldSave(oldVersion){
     if (player.lastSafeTab === "s") player.lastSafeTab = "u"
     if (player.p.upgrades.includes(23)) player.u.unlocked = true
 }
+
 // ==========================================
 // Ticks per second (TPS) tracking and display
 // ==========================================
 
-// 1. Tracking variables (place near the top of mod.js)
+// 1. Tracking variables
 let frameCount = 0;
 let tps = 0;
 let lastTime = performance.now();
@@ -166,7 +192,7 @@ function updatePerformanceStats(diff) {
     }
 }
 
-// 3. UI Display function (you can put this directly inside a layer's tabFormat array)
+// 3. UI Display function
 function performanceDisplay() {
     return "<b>TPS:</b> " + tps;
 }
