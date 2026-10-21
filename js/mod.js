@@ -90,7 +90,7 @@ function canGenPoints() {
     return true
 }
 
-// Calculate points/sec!
+// Calculate point gain/sec:
 function getPointGen() {
     if (!canGenPoints())
         return new Decimal(0)
@@ -121,7 +121,7 @@ function getPointGen() {
 
     if (player.s && player.s.unlocked) gain = gain.times(tmp.s.effect.points);    
     
-    // Apply the point exponent from getPointExp()
+    // Apply the point exponent from getPointExp() to get proper point gain/sec.
     gain = gain.pow(getPointExp());
 
     return gain
