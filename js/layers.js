@@ -46,12 +46,16 @@ addLayer("p", {
         // --- Mega (m) Effects / Upgrades ---
         if (hasUpgrade("m", 11)) mult = mult.times(5)
         if (hasUpgrade("m", 13)) mult = mult.times(1e9)
+        if (hasUpgrade("m", 14)) mult = mult.times(1e8)
+        if (hasUpgrade("m", 21)) mult = mult.times(upgradeEffect("m", 21))
         if (player.m && player.m.unlocked) {
             mult = mult.times(layers.m.effect().pMult)
         }
 
         // --- Replicanti (r) Upgrades ---
         if (hasUpgrade("r", 24) && player.m && player.m.unlocked) mult = mult.times(upgradeEffect("r", 24))
+        if (hasUpgrade("r", 35)) mult = mult.times(10)
+        if (hasUpgrade("r", 41)) mult = mult.times(upgradeEffect("r", 41))
 
         // --- Buyables ---
         if (getBuyableAmount("p", 11) && getBuyableAmount("p", 11).gt(0)) mult = mult.times(buyableEffect("p", 11).prestige)
@@ -92,99 +96,99 @@ addLayer("p", {
         },
     },
 
-   // 4. BUYABLE CODE
-   // 4. BUYABLE CODE
-buyables: {
-    11: {
-        title: "A new buyable!",
-        cost(x) { return new Decimal(100000).times(Decimal.pow(4, x)) },
-        effect(x) {
-            return {
-                prestige: Decimal.pow(1.2, x),
-            }
-        },
-        display() {
-            let data = tmp[this.layer].buyables[this.id]
-            return "Cost: " + format(data.cost) + " Prestige Points\n" +
-                "Amount: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n" +
-                "Prestige point gain: x" + format(data.effect.prestige) + "\n"
-        },
-        unlocked() { return hasUpgrade("u", 13) || (getBuyableAmount(this.layer, this.id) && getBuyableAmount(this.layer, this.id).gt(0)) },
-        canAfford() { return player[this.layer].points.gte(tmp[this.layer].buyables[this.id].cost) },
-        buy() {
-            let amount = getBuyableAmount(this.layer, this.id);
-            let points = player[this.layer].points;
-            let baseCost = new Decimal(100000);
-            let ratio = new Decimal(4);
-
-            let currentCost = baseCost.times(Decimal.pow(ratio, amount));
-            if (points.lt(currentCost)) return;
-
-            // O(1) calculation for extra levels: n = floor( log_r( 1 + (P * (r - 1)) / (C * r^x) ) )
-            let extraLevels = points.times(ratio.sub(1))
-                                    .div(currentCost)
-                                    .add(1)
-                                    .log(ratio)
-                                    .floor();
-
-            if (extraLevels.gte(1)) {
-                if (!hasUpgrade("auto", 13)) {
-                    let totalCost = currentCost.times(Decimal.pow(ratio, extraLevels).sub(1)).div(ratio.sub(1));
-                    player[this.layer].points = player[this.layer].points.sub(totalCost);
-                    player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(totalCost);
+    // 4. BUYABLE CODE
+    buyables: {
+        11: {
+            title: "A new buyable!",
+            cost(x) { return new Decimal(100000).times(Decimal.pow(4, x)) },
+            effect(x) {
+                return {
+                    prestige: Decimal.pow(1.2, x),
                 }
-                setBuyableAmount(this.layer, this.id, amount.add(extraLevels));
-            }
+            },
+            display() {
+                let data = tmp[this.layer].buyables[this.id]
+                return "Cost: " + format(data.cost) + " Prestige Points\n" +
+                    "Amount: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n" +
+                    "Prestige point gain: x" + format(data.effect.prestige) + "\n"
+            },
+            unlocked() { return hasUpgrade("u", 13) || (getBuyableAmount(this.layer, this.id) && getBuyableAmount(this.layer, this.id).gt(0)) },
+            canAfford() { return player[this.layer].points.gte(tmp[this.layer].buyables[this.id].cost) },
+            buy() {
+                let amount = getBuyableAmount(this.layer, this.id);
+                let points = player[this.layer].points;
+                let baseCost = new Decimal(100000);
+                let ratio = new Decimal(4);
+
+                let currentCost = baseCost.times(Decimal.pow(ratio, amount));
+                if (points.lt(currentCost)) return;
+
+                // O(1) calculation for extra levels: n = floor( log_r( 1 + (P * (r - 1)) / (C * r^x) ) )
+                let extraLevels = points.times(ratio.sub(1))
+                                        .div(currentCost)
+                                        .add(1)
+                                        .log(ratio)
+                                        .floor();
+
+                if (extraLevels.gte(1)) {
+                    if (!hasUpgrade("auto", 13)) {
+                        let totalCost = currentCost.times(Decimal.pow(ratio, extraLevels).sub(1)).div(ratio.sub(1));
+                        player[this.layer].points = player[this.layer].points.sub(totalCost);
+                        player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(totalCost);
+                    }
+                    setBuyableAmount(this.layer, this.id, amount.add(extraLevels));
+                }
+            },
+        },
+        12: {
+            title: "Another Buyable?",
+            cost(x) { return new Decimal("1e14").times(Decimal.pow(10, x)) },
+            effect(x) {
+                return {
+                    points: Decimal.pow(2, x),
+                    prestige: Decimal.pow(1.5, x),
+                    ultra: Decimal.pow(1.25, x),
+                    automation: Decimal.pow(1.1, x),
+                }
+            },
+            display() {
+                let data = tmp[this.layer].buyables[this.id]
+                return "Cost: " + format(data.cost) + " Prestige Points\n" +
+                    "Amount: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n" +
+                    "Point gain: x" + format(data.effect.points) + "\n" +
+                    "Prestige Point gain: x" + format(data.effect.prestige) + "\n" +
+                    "Ultra Point gain: x" + format(data.effect.ultra) + "\n"
+            },
+            unlocked() { return hasUpgrade("u", 24) || (getBuyableAmount(this.layer, this.id) && getBuyableAmount(this.layer, this.id).gt(0)) },
+            canAfford() { return player[this.layer].points.gte(tmp[this.layer].buyables[this.id].cost) },
+            buy() {
+                let amount = getBuyableAmount(this.layer, this.id);
+                let points = player[this.layer].points;
+                let baseCost = new Decimal("1e14");
+                let ratio = new Decimal(10);
+
+                let currentCost = baseCost.times(Decimal.pow(ratio, amount));
+                if (points.lt(currentCost)) return;
+
+                // O(1) calculation for extra levels
+                let extraLevels = points.times(ratio.sub(1))
+                                        .div(currentCost)
+                                        .add(1)
+                                        .log(ratio)
+                                        .floor();
+
+                if (extraLevels.gte(1)) {
+                    if (!hasUpgrade("auto", 13)) {
+                        let totalCost = currentCost.times(Decimal.pow(ratio, extraLevels).sub(1)).div(ratio.sub(1));
+                        player[this.layer].points = player[this.layer].points.sub(totalCost);
+                        player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(totalCost);
+                    }
+                    setBuyableAmount(this.layer, this.id, amount.add(extraLevels));
+                }
+            },
         },
     },
-    12: {
-        title: "Another Buyable?",
-        cost(x) { return new Decimal("1e14").times(Decimal.pow(10, x)) },
-        effect(x) {
-            return {
-                points: Decimal.pow(2, x),
-                prestige: Decimal.pow(1.5, x),
-                ultra: Decimal.pow(1.25, x),
-                automation: Decimal.pow(1.1, x),
-            }
-        },
-        display() {
-            let data = tmp[this.layer].buyables[this.id]
-            return "Cost: " + format(data.cost) + " Prestige Points\n" +
-                "Amount: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n" +
-                "Point gain: x" + format(data.effect.points) + "\n" +
-                "Prestige Point gain: x" + format(data.effect.prestige) + "\n" +
-                "Ultra Point gain: x" + format(data.effect.ultra) + "\n"
-        },
-        unlocked() { return hasUpgrade("u", 24) || (getBuyableAmount(this.layer, this.id) && getBuyableAmount(this.layer, this.id).gt(0)) },
-        canAfford() { return player[this.layer].points.gte(tmp[this.layer].buyables[this.id].cost) },
-        buy() {
-            let amount = getBuyableAmount(this.layer, this.id);
-            let points = player[this.layer].points;
-            let baseCost = new Decimal("1e14");
-            let ratio = new Decimal(10);
 
-            let currentCost = baseCost.times(Decimal.pow(ratio, amount));
-            if (points.lt(currentCost)) return;
-
-            // O(1) calculation for extra levels
-            let extraLevels = points.times(ratio.sub(1))
-                                    .div(currentCost)
-                                    .add(1)
-                                    .log(ratio)
-                                    .floor();
-
-            if (extraLevels.gte(1)) {
-                if (!hasUpgrade("auto", 13)) {
-                    let totalCost = currentCost.times(Decimal.pow(ratio, extraLevels).sub(1)).div(ratio.sub(1));
-                    player[this.layer].points = player[this.layer].points.sub(totalCost);
-                    player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(totalCost);
-                }
-                setBuyableAmount(this.layer, this.id, amount.add(extraLevels));
-            }
-        },
-    },
-},
     // 5. UPGRADES
     upgrades: {
         rows: 4,
@@ -217,10 +221,17 @@ buyables: {
         },
         14: {
             title: "Fourth Upgrade",
-            description: "Boosts points by points^0.25. First hardcap at 1e9.",
+            description() {
+                return hasUpgrade("p", 45)
+                    ? "Boosts points by points^0.25. Hardcap increased to 1e100."
+                    : "Boosts points by points^0.25. First hardcap at 1e9.";
+            },
             cost: new Decimal(40),
             unlocked() { return hasUpgrade(this.layer, 13) },
-            effect() { return player.points.pow(0.25).max(1).min(1e9) },
+            effect() {
+                let cap = hasUpgrade("p", 45) ? new Decimal("1e100") : new Decimal(1e9);
+                return player.points.pow(0.25).max(1).min(cap);
+            },
             effectDisplay() { return format(this.effect()) + "x" },
         },
         15: {
@@ -331,6 +342,12 @@ buyables: {
             cost: new Decimal("1e200"),
             unlocked() { return hasUpgrade("p", 43) },
         },
+        45: {
+            title: "Twentieth Upgrade",
+            description: "Increases the hardcap of the Fourth Upgrade from 1e9 to 1e100.",
+            cost: new Decimal("1e373"),
+            unlocked() { return hasUpgrade("p", 44) },
+        },
     },
 
     // 6. EVERYTHING ELSE (Updates, Hotkeys, Tab Formats, Reset logic, etc.)
@@ -400,10 +417,6 @@ buyables: {
     },
 });
 
-
-
-
-
 // ==========================================
 // ULTRA LAYER ("u")
 // ==========================================
@@ -450,9 +463,11 @@ addLayer("u", {
         if (player.m && player.m.unlocked) {
             mult = mult.times(layers.m.effect().uMult)
             if (hasUpgrade("m", 13)) mult = mult.times(1e9)
+            if (hasUpgrade("m", 14)) mult = mult.times(1e8)
         }
         // --- Super (s) Effects/Upgrades ---
         if (player.s && player.s.unlocked) mult = mult.times(tmp.s.effect.ultra);
+        if (hasUpgrade("s", 22)) mult = mult.times(1e6);
 
         // --- Buyables ---
         if (getBuyableAmount("p", 12) && getBuyableAmount("p", 12).gt(0)) mult = mult.times(buyableEffect("p", 12).ultra)
@@ -584,6 +599,30 @@ addLayer("u", {
             cost: new Decimal(1e147),
             unlocked() { return hasUpgrade(this.layer, 35) },
         },
+        42: {
+            title: "Debuff nerf",
+            description: "Decrease the exponent of the debuff from Replicanti's Softcap by ^.05",
+            cost: new Decimal(1e200),
+            unlocked() { return hasUpgrade(this.layer, 41) },
+        },
+        43: {
+            title: "Debuff nerf again..?",
+            description: "Decrease the exponent of the debuff from Replicanti's Softcap by ^.05",
+            cost: new Decimal(1e205),
+            unlocked() { return hasUpgrade(this.layer, 42) },
+        },
+        44: {
+            title: "Why more Debuff nerf",
+            description: "Decrease the exponent of the debuff from Replicanti's Softcap by ^.05",
+            cost: new Decimal(1e208),
+            unlocked() { return hasUpgrade(this.layer, 43) },
+        },
+        45: {
+            title: "The final nerf",
+            description: "Decrease the exponent of the debuff from Replicanti's Softcap by ^.1",
+            cost: new Decimal(1e210),
+            unlocked() { return hasUpgrade(this.layer, 44) },
+        },
     },
 
     // 4. EVERYTHING ELSE (Updates, Tab Formats, etc.)
@@ -600,10 +639,6 @@ addLayer("u", {
     },
     tabFormat: ["main-display", "prestige-button", "resource-display", "upgrades"],
 });
-
-
-
-
 
 // ==========================================
 // REPLICANTI LAYER ("r")
@@ -640,10 +675,14 @@ addLayer("r", {
         if (hasUpgrade("r", 15)) mult = mult.times(upgradeEffect("r", 15));
         if (hasUpgrade("r", 21)) mult = mult.times(upgradeEffect("r", 21));
         if (hasUpgrade("r", 22)) mult = mult.times(upgradeEffect("r", 22));
+        if (hasUpgrade("r", 42)) mult = mult.times(upgradeEffect("r", 42)); // Fixed to use upgradeEffect
 
         // --- Ultra (u) Upgrades ---
         if (hasUpgrade("u", 34)) mult = mult.times(upgradeEffect("u", 34));
         if (hasUpgrade("u", 35)) mult = mult.times(upgradeEffect("u", 35));
+
+        // --- Mega (m) Upgrades ---
+        if (hasUpgrade("m", 14)) mult = mult.times(100000);
 
         // --- Buyables ---
         if (getBuyableAmount("r", 11).gt(0)) mult = mult.times(buyableEffect("r", 11).replicanti);
@@ -674,17 +713,52 @@ addLayer("r", {
             if (hasUpgrade("r", 33)) {
                 debuff = debuff.div(10);
             }
+            if (hasUpgrade("r", 42)) {
+                debuff = debuff.div(upgradeEffect("r", 42));
+            }
+            if (hasUpgrade("u", 42)) {
+                debuff = debuff.div(player.r.points.max(1).pow(.05));
+            }
+            if (hasUpgrade("u", 43)) {
+                debuff = debuff.div(player.r.points.max(1).pow(.05));
+            }
+            if (hasUpgrade("u", 44)) {
+                debuff = debuff.div(player.r.points.max(1).pow(.05));
+            }
+            if (hasUpgrade("u", 45)) {
+                debuff = debuff.div(player.r.points.max(1).pow(.1));
+            }
+            if (hasUpgrade("s", 15)) {
+                debuff = debuff.div(player.r.points.max(1).pow(.06));
+            }
+            // ---Challenges (s)---
+            if (hasChallenge("s", 21)) {
+                debuff = debuff.div(player.r.points.max(1).pow(.04));
+            }
             mult = mult.sub(1).div(debuff).add(1);
+        }
+
+        // --- New Softcap (^0.5 past 1e500 Replicanti) ---
+        let sc2 = new Decimal("1e500");
+        if (player.r.points.gt(sc2)) {
+            mult = mult.pow(0.5);
         }
 
         return mult;
     },
 
-    // 3. BUYABLE CODE
+    // 3. BUYABLE CODE (Optimized O(1) Bulk Buying)
     buyables: {
         11: {
             title: "Replicanti Accelerator",
             cost(x) { return new Decimal(1e9).times(Decimal.pow(10, x)) },
+            effect(x) {
+                return {
+                    replicanti: Decimal.pow(1.1, x),
+                    softcapDelay: Decimal.pow(1.25, x),
+                    debuffDiv: Decimal.pow(Math.sqrt(1.25), x),
+                }
+            },
             display() {
                 let data = tmp[this.layer].buyables[this.id]
                 return "Cost: " + format(data.cost) + " Replicanti Points\n" +
@@ -696,16 +770,28 @@ addLayer("r", {
             unlocked() { return hasUpgrade("r", 23) || (getBuyableAmount(this.layer, this.id) && getBuyableAmount(this.layer, this.id).gt(0)) },
             canAfford() { return player[this.layer].points.gte(tmp[this.layer].buyables[this.id].cost) },
             buy() {
-                let cost = tmp[this.layer].buyables[this.id].cost
-                player[this.layer].points = player[this.layer].points.sub(cost)
-                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-                player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(cost)
-            },
-            effect(x) {
-                return {
-                    replicanti: Decimal.pow(1.1, x),
-                    softcapDelay: Decimal.pow(1.25, x),
-                    debuffDiv: Decimal.pow(Math.sqrt(1.25), x),
+                let amount = getBuyableAmount(this.layer, this.id);
+                let points = player[this.layer].points;
+                let baseCost = new Decimal(1e9);
+                let ratio = new Decimal(10);
+
+                let currentCost = baseCost.times(Decimal.pow(ratio, amount));
+                if (points.lt(currentCost)) return;
+
+                // O(1) calculation for extra levels: n = floor( log_r( 1 + (P * (r - 1)) / (C * r^x) ) )
+                let extraLevels = points.times(ratio.sub(1))
+                                        .div(currentCost)
+                                        .add(1)
+                                        .log(ratio)
+                                        .floor();
+
+                if (extraLevels.gte(1)) {
+                    if (!hasUpgrade("auto", 15)) {
+                        let totalCost = currentCost.times(Decimal.pow(ratio, extraLevels).sub(1)).div(ratio.sub(1));
+                        player[this.layer].points = player[this.layer].points.sub(totalCost);
+                        player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(totalCost);
+                    }
+                    setBuyableAmount(this.layer, this.id, amount.add(extraLevels));
                 }
             },
         }
@@ -713,7 +799,7 @@ addLayer("r", {
 
     // 4. UPGRADES
     upgrades: {
-        rows: 3,
+        rows: 4,
         cols: 5,
         11: {
             title: "Is this layer a reference to something",
@@ -816,6 +902,28 @@ addLayer("r", {
             cost: new Decimal(1e36),
             unlocked() { return hasUpgrade("r", 33) },
         },
+        35: {
+            title: "Small Prestige boost",
+            description: "Boosts Prestige point gain by x10.",
+            cost: new Decimal(1e60),
+            unlocked() { return hasUpgrade("r", 34) },
+        },
+        41: {
+            title: "Replicanti boosts prestige points more",
+            description: "Boosts Prestige Point gain by replicanti^.066.",
+            cost: new Decimal(1e260),
+            effect() { return player.r.points.max(1).pow(0.066) },
+            effectDisplay() { return format(this.effect()) + "x" },
+            unlocked() { return hasUpgrade("r", 35) },
+        },
+        42: {
+            title: "More Replicanti",
+            description: "Boosts Replicanti gain multiplier by 10x.",
+            cost: new Decimal("1e469"),
+            effect() { return new Decimal(10) }, // Added missing effect function!
+            effectDisplay() { return format(this.effect()) + "x" }, // Added missing display!
+            unlocked() { return hasUpgrade("r", 41) },
+        },
     },
 
     // 5. EVERYTHING ELSE (Updates, Tab Formats, etc.)
@@ -826,8 +934,13 @@ addLayer("r", {
 
         if (!player.r.unlocked) return;
 
+        // Automatically buy Buyable 11 safely using .call() if Automation Upgrade 15 is owned
+        if (hasUpgrade("auto", 15) && layers["r"].buyables[11].canAfford()) {
+            layers["r"].buyables[11].buy.call({ layer: "r", id: 11 });
+        }
+
         if (player.m && player.m.points.gte(4)) {
-            let mult = tmp.r.gainMult;
+            let mult = layers.r.gainMult();
             let rate = mult.pow(1);
             player.r.points = player.r.points.times(rate.pow(diff));
         }
@@ -845,7 +958,7 @@ addLayer("r", {
         ["display-text", function() {
             let hasMinMega = player.m && player.m.points.gte(4);
             let rawRate = hasMinMega ? layers.r.preSoftcapMult() : new Decimal(1);
-            let finalRate = hasMinMega ? tmp.r.gainMult : new Decimal(1);
+            let finalRate = hasMinMega ? layers.r.gainMult() : new Decimal(1);
             
             let text = `Your Replicanti is multiplying by <b>x${format(finalRate, 4)}</b>/sec.`;
             
@@ -867,7 +980,31 @@ addLayer("r", {
                     if (getBuyableAmount("r", 11).gt(0)) {
                         debuffVal = debuffVal.div(buyableEffect("r", 11).debuffDiv);
                     }
+                    if (hasUpgrade("u", 42)) {
+                        debuffVal = debuffVal.div(player.r.points.max(1).pow(.05));
+                    }
+                    if (hasUpgrade("u", 43)) {
+                        debuffVal = debuffVal.div(player.r.points.max(1).pow(.05));
+                    }
+                    if (hasUpgrade("u", 44)) {
+                        debuffVal = debuffVal.div(player.r.points.max(1).pow(.05));
+                    }
+                    if (hasUpgrade("u", 45)) {
+                        debuffVal = debuffVal.div(player.r.points.max(1).pow(.1));
+                    }
+                    if (hasUpgrade("s", 15)) {
+                        debuffVal = debuffVal.div(player.r.points.max(1).pow(.06));
+                    }
+                    // ---Challenges (s)---
+                    if (hasChallenge("s", 21)) {
+                        debuffVal = debuffVal.div(player.r.points.max(1).pow(.04));
+                    }
                     text += `<br><span style="color: #ff4444;">(Softcapped: (mult - 1) / ${format(debuffVal, 3)} + 1)</span>`;
+                }
+
+                let sc2 = new Decimal("1e500");
+                if (player.r.points.gt(sc2)) {
+                    text += `<br><span style="color: #ff4444;">(Power Softcapped (^0.5): Replicanti > 1e500)</span>`;
                 }
             }
             return text;
@@ -877,10 +1014,6 @@ addLayer("r", {
         "buyables",
     ],
 });
-
-
-
-
 
 // ==========================================
 // MEGA LAYER ("m")
@@ -932,8 +1065,8 @@ addLayer("m", {
 
     // 2. UPGRADES
     upgrades: {
-        rows: 1,
-        cols: 8,
+        rows: 2,
+        cols: 5,
         11: {
             title: "First Mega Upgrade :O",
             description: "Boosts point gain by x10 and prestige point gain by x5.",
@@ -951,6 +1084,28 @@ addLayer("m", {
             cost: new Decimal(4),
             unlocked() { return hasUpgrade("m", 12) },
         },
+        14: {
+            title: "More buffs.",
+            description: "Point gain x1e9, Prestige point and Ultra point gain by x1e8, Replicanti gain multiplier by x100,000, And Super Point gain by x10.",
+            cost: new Decimal(5),
+            unlocked() { return hasUpgrade("m", 13) },
+        },
+        15: {
+            title: "Mega points boosts more things.",
+            description: "Point gain x(Mega points^5), and Super Point gain x10 for every Mega point.",
+            cost: new Decimal(6),
+            effect() { return player.m.points.max(1).pow(5) },
+            effectDisplay() { return format(this.effect()) + "x" },
+            unlocked() { return hasUpgrade("m", 14) },
+        },
+        21: {
+            title: "More prestige points.",
+            description: "Multiply prestige points gain by x4 for every mega point.",
+            cost: new Decimal(7),
+            effect() { return new Decimal(4).pow(player.m.points.max(1)) },
+            effectDisplay() { return format(this.effect()) + "x" },
+            unlocked() { return hasUpgrade("m", 15) },
+        },
     },
 
     // 3. EVERYTHING ELSE (Resets, etc.)
@@ -967,7 +1122,8 @@ addLayer("m", {
             player.u.upgrades = player.u.upgrades.filter(id => id === 25);
         }
 
-        if (player.p) {
+        // Only reset challenge 11 if Auto Upgrade 14 has NOT been bought
+        if (player.p && !hasUpgrade("auto", 14)) {
             if (player.p.challenges) {
                 Vue.set(player.p.challenges, 11, 0);
             }
@@ -977,10 +1133,6 @@ addLayer("m", {
         }
     },
 });
-
-
-
-
 
 // ==========================================
 // SUPER LAYER ("s")
@@ -992,13 +1144,13 @@ addLayer("s", {
     position: 1, 
     row: 2, 
     color: "#0e3f0a",
-    resource: "Super Generator",
+    resource: "Super Generators",
     baseResource: "Prestige Points",
     baseAmount() { return player.p.points },
     
     // Static layer configuration
     type: "static",
-    requires: new Decimal("1e200"), // Initial cost: 1e200 Prestige Points
+    requires: new Decimal("1e270"), // Initial cost: 1e270 Prestige Points
     base: 100,                      // Standard base scaling for static cost steps
     exponent: 2.5,                  // Static scaling exponent
     
@@ -1006,6 +1158,7 @@ addLayer("s", {
         unlocked: false,
         points: new Decimal(0),       // "Super" amount from static resets
         superPoints: new Decimal(0),  // "Super Points" generated passively
+        challengesUnlocked: false,
     }},
 
     // Layer unlocks when Prestige Upgrade 44 is owned
@@ -1015,21 +1168,50 @@ addLayer("s", {
     // 2. GAIN MULTIPLIER & AFFECTING CHECKS
     getSuperPointMult() {
         let mult = new Decimal(1);
+        // --- Super (s) Upgrades ---
         if (hasUpgrade("s", 11)) mult = mult.times(3);
         if (hasUpgrade("s", 12)) mult = mult.times(10);
+        if (hasUpgrade("s", 13)) mult = mult.times(player.points.max(1).log(10).max(1));
+        if (hasUpgrade("s", 14)) mult = mult.times(player.r.points.max(1).pow(0.05));
+
+        // --- Replicanti (r) Upgrades ---
         if (hasUpgrade("r", 34)) mult = mult.times(10);
+
+        // --- Mega (m) Upgrades ---
+        if (hasUpgrade("m", 14)) mult = mult.times(10);
+        if (hasUpgrade("m", 15)) mult = mult.times(new Decimal(10).pow(player.m.points.max(1)));
         return mult;
     },
 
-    // 3. CHALLENGES (If present)
-    // challenges: {},
+    // 3. CHALLENGES
+    challenges: {
+        21: {
+            name: "Instant Softcap Challenge",
+            challengeDescription: "The point softcap starts instantly.",
+            goalDescription: "1.00e128 Ultra Points",
+            rewardDescription: "Decreases the exponent of the debuff from Replicanti's softcap by ^.04, meaning that with prior upgrades, the debuff will be reduced all the way down to ^0.15.",
+            goal: new Decimal("1e128"),
+            canComplete() {
+                return player.points.gte(this.goal);
+            },
+            unlocked() { return hasUpgrade("s", 21); },
+            
+            // Resets layers p, u, and r when entering the challenge
+            onEnter() {
+                player.p = getStartLayerData("p");
+                player.u = getStartLayerData("u");
+                player.r = getStartLayerData("r");
+                needCanvasUpdate = true;
+            },
+        },
+    },
 
     // 4. BUYABLES (If present)
     // buyables: {},
 
     // 5. UPGRADES
     upgrades: {
-        rows: 1,
+        rows: 2,
         cols: 5,
         11: {
             title: "Super points boost alot of things...",
@@ -1043,17 +1225,55 @@ addLayer("s", {
             cost: new Decimal(2),
             unlocked() { return hasUpgrade("s", 11) },
         },
+        13: {
+            title: "More super points.",
+            description: "Boost super points gain by log(points)",
+            cost: new Decimal(3),
+            effect() { return player.points.max(1).log(10).max(1) },
+            effectDisplay() { return format(this.effect()) + "x" },
+            unlocked() { return hasUpgrade("s", 12) },
+        },
+        14: {
+            title: "Replicanti boosts super points.",
+            description: "Boost super points gain by replicanti^0.05",
+            cost: new Decimal(4),
+            effect() { return player.r.points.max(1).pow(0.05) },
+            effectDisplay() { return format(this.effect()) + "x" },
+            unlocked() { return hasUpgrade("s", 13) },
+        },
+        15: {
+            title: "It was not the final nerf.",
+            description: "Decrease the exponent of the debuff from Replicanti's Softcap by ^.06",
+            cost: new Decimal(5),
+            unlocked() { return hasUpgrade("s", 14) },
+        },
+        21: {
+            title: "Instant Softcap",
+            description: "Unlocks a new challenge where the softcap starts instantly.",
+            cost: new Decimal(7),
+            unlocked() { return hasUpgrade("s", 15) },
+            onPurchase() {
+                player.s.challengesUnlocked = true;
+                if (typeof needCanvasUpdate !== "undefined") needCanvasUpdate = true;
+            },
+        },
+        22: {
+            title: "Ultra point boost",
+            description: "Boosts Ultra point gain by x1e6.",
+            cost: new Decimal(7),
+            unlocked() { return hasUpgrade("s", 21) },
+        },
     },
 
     // 6. EVERYTHING ELSE (Effects, Updates, Tab Format)
     effect() {
         let sp = player[this.layer].superPoints;
         return {
-            points: sp.max(1).pow(0.075),
-            prestige: sp.max(1).pow(0.05),
-            ultra: sp.max(1).pow(0.03),
-            replicanti: sp.max(1).pow(0.0175),
-            mega: sp.max(1).pow(1.25),
+            points: sp.max(1).pow(0.125),
+            prestige: sp.max(1).pow(0.075),
+            ultra: sp.max(1).pow(0.05),
+            replicanti: sp.max(1).pow(0.025),
+            mega: sp.max(1).pow(1.4),
         };
     },
 
@@ -1074,26 +1294,35 @@ addLayer("s", {
         player.s.superPoints = player.s.superPoints.add(genRate.times(diff));
     },
 
-    tabFormat: [
-        ["display-text", function() {
-            return `You have <h2 style="color: #ff3366; text-shadow: 0 0 10px #ff3366;">${format(player.s.superPoints, 2)}</h2> Super Points`;
-        }],
-        ["display-text", function() {
-            let genRate = player.s.points.gte(1) 
-                ? new Decimal(2).pow(player.s.points.pow(2)).times(layers.s.getSuperPointMult()) 
-                : new Decimal(0);
-            return `Gaining <b>+${format(genRate)}</b> Super Points/sec ${player.s.points.gte(1) ? "(based on your Super amount)" : "(Requires at least 1 Super)"}`;
-        }],
-        "blank",
-        "main-display",
-        "prestige-button",
-        "resource-display",
-        "blank",
-        "upgrades",
-    ],
+    tabFormat: {
+        "Main": {
+            content: [
+                ["display-text", function() {
+                    return `You have <h2 style="color: #ff3366; text-shadow: 0 0 10px #ff3366;">${format(player.s.superPoints, 2)}</h2> Super Points`;
+                }],
+                ["display-text", function() {
+                    let genRate = player.s.points.gte(1) 
+                        ? new Decimal(2).pow(player.s.points.pow(2)).times(layers.s.getSuperPointMult()) 
+                        : new Decimal(0);
+                    return `Gaining <b>+${format(genRate)}</b> Super Points/sec ${player.s.points.gte(1) ? "(based on your Super amount)" : "(Requires at least 1 Super)"}`;
+                }],
+                "blank",
+                "main-display",
+                "prestige-button",
+                "resource-display",
+                "blank",
+                "upgrades",
+            ],
+        },
+        "Challenges": {
+            unlocked() { return hasUpgrade("s", 21) || player.s.challengesUnlocked; },
+            content: [
+                "blank",
+                "challenges",
+            ],
+        },
+    },
 });
-
-
 
 // ==========================================
 // AUTOMATION LAYER ("auto")
@@ -1159,6 +1388,16 @@ addLayer("auto", {
             description: "Automatically buys Prestige Upgrades and Buyables.",
             cost: new Decimal(54),
         },
+        14: {
+            title: "----------",
+            description: "Keep Prestige Challenge on Mega and Super resets.",
+            cost: new Decimal(93),
+        },
+        15: {
+            title:"Automated Replicanti Buyable.",
+            description: "Automatically buys Replicanti Buyable 1.",
+            cost: new Decimal(114),
+        },
     },
 
     // 3. EVERYTHING ELSE (Updates, Tab Formats, Resets)
@@ -1207,10 +1446,6 @@ addLayer("auto", {
     ],
 });
 
-
-
-
-
 // ==========================================
 // INFORMATION LAYER ("i")
 // ==========================================
@@ -1231,7 +1466,7 @@ addLayer("i", {
     }},
     layerShown() { return true },
 
-    // 2. EVERYTHING ELSE (Tab Formats, etc.)
+    // 2. TAB FORMAT
     tabFormat: [
         ["display-text", function() {
             return `
@@ -1241,6 +1476,35 @@ addLayer("i", {
                 </div>
             `;
         }],
+        "blank",
+        ["display-text", function() {
+            let softcapStart = new Decimal(2).pow(1024);
+            let inSoftcapChallenge = inChallenge("s", 21);
+
+            if (player.points.gte(softcapStart) || inSoftcapChallenge) {
+                let basePointCheck = inSoftcapChallenge ? new Decimal(1) : softcapStart;
+                let excess = player.points.max(getPointGen()).max(basePointCheck).div(softcapStart).max(1);
+                let softcapDivider = excess.pow(0.65);
+                
+                // Reverse the softcap division to get the unsoftcapped raw gain
+                let rawGain = getPointGen().times(softcapDivider);
+
+                return `
+                    <div style="border: 2px solid #ff4444; padding: 15px; border-radius: 10px; background-color: rgba(255, 68, 68, 0.1);">
+                        <h3 style="color: #ff4444; margin-top: 0;">Softcap Status</h3>
+                        <p style="font-size: 1.1em; color: #ff4444; font-weight: bold;">You have been softcapped.</p>
+                        <p style="font-size: 1em; color: #dfdfdf;">Point gain is divided by /${format(softcapDivider)}</p>
+                        <p style="font-size: 1.1em; color: #0077FF; font-weight: bold;">Point gain before softcap: ${format(rawGain)}/sec</p>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div style="border: 2px solid #888888; padding: 15px; border-radius: 10px; background-color: rgba(136, 136, 136, 0.1);">
+                        <h3 style="color: #aaaaaa; margin-top: 0;">Softcap Status</h3>
+                        <p style="font-size: 1.1em; color: #888888;">No active softcaps yet. (Softcap starts at 2^1024 points)</p>
+                    </div>
+                `;
+            }
+        }],
     ],
 });
-// --- End of Info Layer ---

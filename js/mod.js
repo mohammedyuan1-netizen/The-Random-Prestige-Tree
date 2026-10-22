@@ -12,11 +12,22 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-    num: "1.6.0.1",
+    num: "1.7",
     name: "Getting somewhere..?",
 }
 
 let changelog = `<h1>Changelog:</h1><br><br>
+<h3>v1.7</h3><br>
+-22/20/26<br>
+-Expanded the game more.<br>
+-Upgrades in each layer:<br>
+&nbsp;&nbsp;Prestige: 20<br>
+&nbsp;&nbsp;Ultra: 20<br>
+&nbsp;&nbsp;Replicanti: 17<br>
+&nbsp;&nbsp;Mega: 6<br>
+&nbsp;&nbsp;Automation: 5<br>
+&nbsp;&nbsp;Super: 7<br>
+Endgame: 1e500 Replicanti, ~1.00e396 Points<br><br>
 <h3>v1.6.0.1</h3><br>
 -Edited the changelog<br>
 <h3>v1.6</h3><br>
@@ -78,7 +89,6 @@ Endgame: 1.00e115 Points<br><br>
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
-// (The ones here are examples, all official functions are already taken care of)
 var doNotCallTheseFunctionsEveryTick = ["blowUpEverything"]
 
 function getStartPoints() {
@@ -90,19 +100,24 @@ function canGenPoints() {
     return true
 }
 
-// Calculate point gain/sec:
+// Calculate point gain/sec with a final-stage tick-safe softcap:
 function getPointGen() {
     if (!canGenPoints())
         return new Decimal(0)
 
     let gain = new Decimal(1)
+
+    // Accumulate all raw point gain multipliers and effects
     if (hasUpgrade("p", 11)) gain = gain.times(3)
     if (hasUpgrade("p", 12)) gain = gain.times(4)
     if (hasUpgrade("p", 13)) {
         let cap = hasUpgrade("p", 35) ? 1e18 : 1e12;
         gain = gain.times(player.p.points.pow(new Decimal(1).div(2)).max(1).min(cap));
     }
-    if (hasUpgrade("p", 14)) gain = gain.times(player.points.pow(0.25).max(1).min(1e9))
+    if (hasUpgrade("p", 14)) {
+        let cap4th = hasUpgrade("p", 45) ? new Decimal("1e100") : new Decimal(1e9);
+        gain = gain.times(player.points.pow(0.25).max(1).min(cap4th))
+    }
     if (hasUpgrade("p", 15)) gain = gain.times(5)
     if (hasUpgrade("p", 22)) gain = gain.times(2)
     if (hasUpgrade("u", 11)) gain = gain.times(5)
@@ -111,18 +126,31 @@ function getPointGen() {
     if (hasChallenge("p", 11)) gain = gain.times(50)
     if (hasUpgrade("m", 11)) gain = gain.times(10)
     if (getBuyableAmount("p", 12) && getBuyableAmount("p", 12).gt(0)) gain = gain.times(buyableEffect("p", 12).points)
-    if (inChallenge("p", 11)) gain = gain.pow(0.5)
+    
     if (hasUpgrade("u", 31)) gain = gain.times(upgradeEffect("u", 31))
     if (hasUpgrade("u", 32)) gain = gain.times(upgradeEffect("u", 32))
     if (hasUpgrade("r", 24)) gain = gain.times(upgradeEffect("r", 24))
     if (hasUpgrade("r", 31)) gain = gain.times(upgradeEffect("r", 31))
     if (hasUpgrade("p", 42)) gain = gain.times(1e6)
-     if (hasUpgrade("p", 43)) gain = gain.times(1e7)
+    if (hasUpgrade("p", 43)) gain = gain.times(1e7)
+    if (hasUpgrade("m", 14)) gain = gain.times(1e9)
+    if (hasUpgrade("m", 15)) gain = gain.times(player.m.points.max(1).pow(5))
 
     if (player.s && player.s.unlocked) gain = gain.times(tmp.s.effect.points);    
+
+    if (inChallenge("p", 11)) gain = gain.pow(0.5);
     
-    // Apply the point exponent from getPointExp() to get proper point gain/sec.
+    // Apply point exponents
     gain = gain.pow(getPointExp());
+
+    // Tick-Safe Final Softcap Logic:
+    let inSoftcapChallenge = inChallenge("s", 21);
+    let softcapStart = inSoftcapChallenge ? new Decimal(1) : new Decimal(2).pow(1024);
+
+    if (player.points.gte(softcapStart) || gain.gte(softcapStart) || inSoftcapChallenge) {
+        let excess = player.points.max(gain).div(softcapStart).max(1);
+        gain = gain.div(excess.pow(0.65));
+    }
 
     return gain
 }
@@ -134,7 +162,7 @@ function getPointExp() {
     return exp;
 }
 
-// You can add non-layer related variables that should to into "player" and be saved here, along with default values
+// You can add non-layer related variables that should go into "player" and be saved here
 function addedPlayerData() { 
     return {}
 }
@@ -142,26 +170,33 @@ function addedPlayerData() {
 // Display extra things at the top of the page
 var displayThings = [
     performanceDisplay,
+    softcapDisplay,
 ]
+
+// Softcap notification under top displays
+function softcapDisplay() {
+    let softcapStart = new Decimal(2).pow(1024);
+    if (player.points.gte(softcapStart) || inChallenge("s", 21)) {
+        return `<br><span style="color: #ff4444; font-weight: bold;">
+            You have been softcapped.<br>
+            Check the info layer for more information related to this softcap.<br>
+        </span>`;
+    }
+    return "";
+}
 
 // Determines when the game "ends"
 function isEndgame() {
     return player.points.gte(new Decimal("e280000000"))
 }
 
-
-// Less important things beyond this point!
-
 // Style for the background, can be a function
 var backgroundStyle = {}
 
-// You can change this if you have things that can be messed up by long tick lengths
 function maxTickLength() {
     return(1)
 }
 
-// Use this if you need to undo inflation from an older version. If the version is older than the version that fixed the issue,
-// you can cap their current resources with this.
 function fixOldSave(oldVersion) {
     if (player.s) {
         player.u = Object.assign(player.u, player.s)
@@ -178,17 +213,14 @@ function fixOldSave(oldVersion) {
 // Ticks per second (TPS) tracking and display
 // ==========================================
 
-// 1. Tracking variables
 let frameCount = 0;
 let tps = 0;
 let lastTime = performance.now();
 
-// 2. Function to update stats (call inside your gameLoop(diff))
 function updatePerformanceStats(diff) {
     frameCount++;
     let currentTime = performance.now();
     
-    // Every 1 second (1000ms), calculate actual TPS
     if (currentTime - lastTime >= 1000) {
         tps = frameCount;
         frameCount = 0;
@@ -196,7 +228,6 @@ function updatePerformanceStats(diff) {
     }
 }
 
-// 3. UI Display function
 function performanceDisplay() {
     return "<b>TPS:</b> " + tps;
 }
